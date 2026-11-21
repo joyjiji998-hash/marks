@@ -38,7 +38,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 .ent{display:flex;justify-content:space-between;font-size:20px;font-weight:600;padding:0 4px}
 .ent span:last-child{color:var(--acc)}
 .ent .sel{background:var(--fr);border-radius:6px;padding:0 8px}
-.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.acts button{font-size:15px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 6px}.mic.on{background:var(--bad);color:var(--bg)}.cap{color:var(--mut);font-size:15px;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .pad button{min-height:54px;font-size:24px;font-weight:600}
 .pad .f{background:var(--fr)}
@@ -68,7 +68,7 @@ var hasEnt=function(){return ent.w!==""||ent.f>0};
 var lp=function(){return cur.passes[cur.passes.length-1]};
 var full=function(){return lp().length>=cur.n&&edit===null};
 function dt(){var d=new Date(),p=function(n){return String(n).padStart(2,"0")};return p(d.getDate())+"/"+p(d.getMonth()+1)+"/"+d.getFullYear()}
-function vib(){try{navigator.vibrate&&navigator.vibrate(25)}catch(e){}}
+function vib(){try{navigator.vibrate&&navigator.vibrate(45)}catch(e){}}
 function wake(){try{navigator.wakeLock.request("screen").then(function(l){wl=l}).catch(function(){})}catch(e){}}
 document.addEventListener("visibilitychange",function(){if(!document.hidden)wake()});
 function key(k){
@@ -136,7 +136,8 @@ function vMark(){
   h+="</div>"+vTape();
   var fin=full();
   h+='<div class="ent"><span>'+(fin?"All questions filled":(edit!==null?"Editing Q"+k+" (was "+fmt(p[edit])+")":"Q"+k))+'</span><span class="'+(ent.sel?"sel":"")+'">'+(fin?"":fmt(val()))+"</span></div>";
-  h+='<div class="acts"><button data-a="undo">Undo</button><button data-a="again"'+(fin?"":" disabled")+">Check again</button></div>";
+  h+=cap?'<div class="cap">'+esc(cap)+"</div>":"";
+  h+='<div class="acts"><button data-a="undo">Undo</button><button data-a="again"'+(fin?"":" disabled")+'>Check again</button><button class="mic'+(listen?" on":"")+'" data-a="mic" aria-label="Voice input">'+MIC+(listen?"Stop":"Mic")+"</button></div>";
   h+='<div class="pad">';
   [["7"],["8"],["9"],[".25","f"],["4"],["5"],["6"],[".50","f"],["1"],["2"],["3"],[".75","f"]].forEach(function(b){
     h+='<button class="'+(b[1]||"")+'" data-a="key" data-k="'+b[0]+'">'+b[0]+"</button>";
@@ -156,6 +157,76 @@ function vHist(){
   });
   return h+"</div>";
 }
+
+var MIC='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg> ';
+var esc=function(x){return x.replace(/&/g,"&amp;").replace(/</g,"&lt;")};
+function undo(){if(edit!==null||hasEnt()){edit=null;ent={w:"",f:0}}else{lp().pop();save()}}
+var U={zero:0,one:1,won:1,two:2,to:2,too:2,three:3,four:4,for:4,five:5,six:6,seven:7,eight:8,ate:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19};
+var T={twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+var FW={quarter:1,quarters:1,fourth:1,fourths:1,forth:1,forths:1};
+var CW={plus:1,add:1,next:1,place:1},UW={undo:1,delete:1,back:1},SW={stop:1,done:1};
+function parse(t){
+  t=t.toLowerCase().replace(/½/g," half ").replace(/¼/g," quarter ").replace(/¾/g," three quarters ")
+    .replace(/\b1\s*\/\s*4\b/g," quarter ").replace(/\b3\s*\/\s*4\b/g," three quarters ").replace(/\b1\s*\/\s*2\b/g," half ")
+    .replace(/\+/g," plus ").replace(/[^a-z0-9. ]/g," ");
+  var k=t.split(/\s+/).map(function(x){return x.replace(/^\.+|\.+$/g,"")}).filter(Boolean),ev=[],i=0;
+  while(i<k.length){
+    var w=k[i],v=null,n=1;
+    if(/^\d+(\.\d+)?$/.test(w))v=parseFloat(w);
+    else if(U[w]!==undefined)v=U[w];
+    else if(T[w]!==undefined){v=T[w];if(U[k[i+1]]>0&&U[k[i+1]]<10){v+=U[k[i+1]];n=2}}
+    if(v!==null){
+      i+=n;
+      if(FW[k[i]]&&v>=1&&v<=3){ev.push({t:"f",v:v/4});i++}
+      else{var wh=Math.floor(v),fr=Math.round((v-wh)*100)/100;if(wh<1000)ev.push({t:"n",v:wh});if(fr===0.25||fr===0.5||fr===0.75)ev.push({t:"f",v:fr})}
+      continue;
+    }
+    i++;
+    if(w==="point"){
+      var d="";
+      while(i<k.length&&d.length<2&&((U[k[i]]!==undefined&&U[k[i]]<10)||/^\d{1,2}$/.test(k[i]))){d+=(U[k[i]]!==undefined?U[k[i]]:k[i]);i++}
+      var f={"25":0.25,"5":0.5,"50":0.5,"75":0.75}[d];if(f)ev.push({t:"f",v:f});
+    }
+    else if(w==="half"||w==="halves")ev.push({t:"f",v:0.5});
+    else if(FW[w])ev.push({t:"f",v:0.25});
+    else if(CW[w])ev.push({t:"c"});
+    else if(UW[w])ev.push({t:"u"});
+    else if(SW[w])ev.push({t:"s"});
+  }
+  return ev;
+}
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition,rec=null,listen=false,cap="";
+function run(t){
+  parse(t).forEach(function(e){
+    if(e.t==="n"){if(!full())ent={w:String(e.v),f:ent.f}}
+    else if(e.t==="f"){if(!full())ent.f=e.v}
+    else if(e.t==="c"){vib();commit()}
+    else if(e.t==="u"){undo()}
+    else if(e.t==="s"){listen=false;try{rec.stop()}catch(x){}}
+  });
+  if(cur&&full()){listen=false;try{rec.stop()}catch(x){}cap="All questions done. Mic is off."}
+}
+function startRec(){
+  rec=new SR();rec.lang="en-IN";rec.continuous=false;rec.interimResults=true;rec.maxAlternatives=1;
+  rec.onresult=function(e){
+    var fin="",it="";
+    for(var i=e.resultIndex;i<e.results.length;i++){var r=e.results[i];if(r.isFinal)fin+=r[0].transcript+" ";else it+=r[0].transcript+" "}
+    if(fin){cap="Heard: “"+fin.trim()+"”";run(fin)}else cap="… "+it.trim();
+    render();
+  };
+  rec.onerror=function(e){
+    if(e.error==="not-allowed"||e.error==="service-not-allowed"){listen=false;cap="Microphone is blocked. Allow it in the browser settings."}
+    else if(e.error==="network"){listen=false;cap="Voice needs internet. Connect and try again."}
+    render();
+  };
+  rec.onend=function(){if(listen)setTimeout(function(){if(listen){try{startRec()}catch(x){}}},150);else render()};
+  try{rec.start()}catch(x){}
+}
+function mic(){
+  if(!SR){cap="Voice typing needs Chrome on Android.";render();return}
+  if(listen){listen=false;cap="";try{rec.stop()}catch(x){}render();return}
+  listen=true;cap="Listening…";startRec();render();
+}
 var ls="";
 function render(){
   var a=document.getElementById("app"),o=a.querySelector(".tape"),st=o&&ls===scr?o.scrollTop:0;
@@ -165,13 +236,14 @@ function render(){
   if(t){t.scrollTop=st;var c=t.querySelector(".cur");
     if(c){var cr=c.getBoundingClientRect(),tr=t.getBoundingClientRect();t.scrollTop+=(cr.top-tr.top)-(t.clientHeight-cr.height)/2}}
 }
-function go(s){scr=s;ent={w:"",f:0};edit=null;arm=null;render()}
+function go(s){if(s!=="mark"){listen=false;try{rec&&rec.stop()}catch(e){}}scr=s;ent={w:"",f:0};edit=null;arm=null;render()}
 document.addEventListener("click",function(e){
   var t=e.target.closest("[data-a]");if(!t)return;vib();
   var a=t.dataset.a,k=t.dataset.k;
   if(a==="key")key(k);
   else if(a==="row"){var i=+k;if(edit===i){edit=null;ent={w:"",f:0}}else{var v=lp()[i];edit=i;ent={w:"",f:0}}render()}
-  else if(a==="undo"){if(edit!==null||hasEnt()){edit=null;ent={w:"",f:0}}else{lp().pop();save()}render()}
+  else if(a==="undo"){undo();render()}
+  else if(a==="mic")mic();
   else if(a==="again"){if(full()){cur.passes.push([]);pa=cur.passes.length-2;pb=cur.passes.length-1;save();render()}}
   else if(a==="new")go("setup");
   else if(a==="hist")go("hist");
