@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Marks Calculator</title>
+<style>
+:root{--bg:#eef2f6;--card:#fff;--ink:#14202b;--mut:#5d6b78;--line:#d5dde5;--acc:#1f4fd8;--on:#fff;--key:#e1e8ef;--fr:#cfdcfb;--bad:#b3261e;--badbg:#fde4e1;--ok:#17703a;--okbg:#d9f2e2;--wn:#8a5a00;--wnbg:#fdefcc;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10161c;--card:#1a232c;--ink:#eaf0f5;--mut:#9aa9b6;--line:#2c3844;--acc:#6f93ff;--on:#0a1230;--key:#26313c;--fr:#27386b;--bad:#ff8a80;--badbg:#3d1f1c;--ok:#6fd195;--okbg:#17321f;--wn:#f2c25b;--wnbg:#3a2d0c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10161c;--card:#1a232c;--ink:#eaf0f5;--mut:#9aa9b6;--line:#2c3844;--acc:#6f93ff;--on:#0a1230;--key:#26313c;--fr:#27386b;--bad:#ff8a80;--badbg:#3d1f1c;--ok:#6fd195;--okbg:#17321f;--wn:#f2c25b;--wnbg:#3a2d0c;color-scheme:dark}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.3 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums}
+#app{height:100%;display:flex;flex-direction:column;max-width:520px;margin:0 auto;padding:10px 12px 12px;gap:8px;box-sizing:border-box}
+button{font:inherit;color:inherit;border:0;border-radius:14px;background:var(--key);min-height:48px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.4}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.top b{font-size:20px}.top button{min-height:40px;padding:0 14px;font-size:15px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 14px}
+.tot{display:flex;align-items:baseline;gap:8px}
+.tot .n{font-size:52px;font-weight:700;line-height:1}.tot .m{font-size:20px;color:var(--mut)}
+.tot.over .n{color:var(--bad)}
+.sub{color:var(--mut);font-size:15px;margin-top:4px}
+.warn{margin-top:6px;padding:6px 10px;border-radius:10px;background:var(--wnbg);color:var(--wn);font-weight:600;font-size:15px}
+.done{background:var(--okbg);color:var(--ok)}
+.tape{flex:1;min-height:90px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.r{display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 10px;flex:none}
+.split .r{grid-template-columns:34px 1fr 1fr}
+.q{color:var(--mut);font-size:15px}
+.c{font-size:22px;font-weight:600;min-height:34px;display:flex;align-items:center}
+.split .c{justify-content:center}
+.c.cur{background:var(--fr);border-radius:8px;padding:0 8px}
+.r.bad{background:var(--badbg);border-color:var(--bad)}
+.r.bad .c{color:var(--bad)}
+.sh{display:grid;grid-template-columns:34px 1fr 1fr;gap:8px;font-weight:600;text-align:center;font-size:15px;flex:none}
+.sh select{font:inherit;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:4px}
+.res{padding:8px 12px;border-radius:12px;font-weight:700;text-align:center;flex:none}
+.res.ok{background:var(--okbg);color:var(--ok)}.res.bad{background:var(--badbg);color:var(--bad)}
+.ent{display:flex;justify-content:space-between;font-size:20px;font-weight:600;padding:0 4px}
+.ent span:last-child{color:var(--acc)}
+.ent .sel{background:var(--fr);border-radius:6px;padding:0 8px}
+.acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.acts button{font-size:15px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 6px}.mic.on{background:var(--bad);color:var(--bg)}.cap{color:var(--mut);font-size:15px;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.pad button{min-height:54px;font-size:24px;font-weight:600}
+.pad .f{background:var(--fr)}
+.pad .p{grid-column:span 2;background:var(--acc);color:var(--on);font-size:30px}
+.form{display:flex;flex-direction:column;gap:14px;margin-top:10px}
+.form label{display:flex;flex-direction:column;gap:6px;font-weight:600}
+.form input{font:inherit;font-size:28px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.go{background:var(--acc);color:var(--on);font-weight:700;font-size:20px;min-height:56px}
+.h{display:flex;flex-direction:column;gap:8px;padding:12px 14px;text-align:left;background:var(--card);border:1px solid var(--line);width:100%}
+.h .row{display:flex;justify-content:space-between;align-items:center;width:100%}
+.h b{font-size:20px}.h .t{font-size:24px;font-weight:700}
+.chip{font-size:14px;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--key)}
+.chip.ok{background:var(--okbg);color:var(--ok)}.chip.bad{background:var(--badbg);color:var(--bad)}.chip.w{background:var(--wnbg);color:var(--wn)}
+.del{min-height:36px;padding:0 12px;font-size:14px;background:transparent;border:1px solid var(--line)}
+.del.arm{background:var(--badbg);color:var(--bad);border-color:var(--bad)}
+.empty{color:var(--mut);text-align:center;margin-top:30px}
+</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1f4fd8"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="icon-192.png">
+</head><body><div id="app"></div>
+<script>
+var K="marks.v1",P=[],cur=null,scr="setup",ent={w:"",f:0},edit=null,pa=0,pb=1,arm=null,wl=null;
+function load(){try{P=JSON.parse(localStorage.getItem(K)||"[]")}catch(e){P=[]}}
+function save(){try{localStorage.setItem(K,JSON.stringify(P))}catch(e){}}
+var r2=function(x){return Math.round(x*100)/100},fmt=function(x){return String(r2(x))};
+var sum=function(a){return r2(a.reduce(function(s,v){return s+v},0))};
+var val=function(){return(ent.w===""?0:parseInt(ent.w,10))+ent.f};
+var hasEnt=function(){return ent.w!==""||ent.f>0};
+var lp=function(){return cur.passes[cur.passes.length-1]};
+var full=function(){return lp().length>=cur.n&&edit===null};
+function dt(){var d=new Date(),p=function(n){return String(n).padStart(2,"0")};return p(d.getDate())+"/"+p(d.getMonth()+1)+"/"+d.getFullYear()}
+function vib(){try{navigator.vibrate&&navigator.vibrate(45)}catch(e){}}
+function wake(){try{navigator.wakeLock.request("screen").then(function(l){wl=l}).catch(function(){})}catch(e){}}
+document.addEventListener("visibilitychange",function(){if(!document.hidden)wake()});
+function key(k){
+  if(k==="b"){if(ent.sel)ent={w:"",f:0};else if(ent.w!=="")ent.w=ent.w.slice(0,-1);else ent.f=0}
+  else if(k==="+"){commit()}
+  else if(full()){return}
+  else if(k.charAt(0)==="."){ent.f=parseFloat("0"+k);ent.sel=false}
+  else if(ent.sel){ent={w:k,f:0}}
+  else if(ent.w.length<3){ent.w=(ent.w==="0"?"":ent.w)+k}
+  render();
+}
+function commit(){
+  if(!hasEnt()||full())return;
+  var p=lp(),v=r2(val());
+  if(edit!==null){p[edit]=v;edit=null}else p.push(v);
+  ent={w:"",f:0};save();
+}
+function same(a,b){return a.length===b.length&&a.every(function(v,i){return v===b[i]})}
+function stat(p){
+  var L=p.passes,l=L[L.length-1];
+  if(l.length<p.n)return["In progress","w"];
+  if(L.length<2)return["Done",""];
+  var q=L[L.length-2];
+  if(q.length<p.n)return["Done",""];
+  return same(q,l)?["✓ Match","ok"]:["✗ Differ","bad"];
+}
+function cell(v,i,live){
+  var cursor=edit!==null?edit:lp().length;
+  var cls="c"+(live&&cursor===i?" cur":"");
+  var tap=live&&v!==undefined?' data-a="row" data-k="'+i+'"':"";
+  return'<span class="'+cls+'"'+tap+'>'+(v===undefined?"–":fmt(v))+"</span>";
+}
+function vTape(){
+  var L=cur.passes,n=cur.n,h="",i;
+  if(L.length<2){
+    h='<div class="tape">';
+    for(i=0;i<n;i++)h+='<div class="r"><span class="q">Q'+(i+1)+"</span>"+cell(L[0][i],i,true)+"</div>";
+    return h+"</div>";
+  }
+  var A=L[pa],B=L[pb],live=pb===L.length-1,bad=0;
+  function hd(w,ix){
+    if(L.length<3)return"<span>Check "+(ix+1)+"</span>";
+    var o="";for(var j=0;j<L.length;j++)o+='<option value="'+j+'"'+(j===ix?" selected":"")+">Check "+(j+1)+"</option>";
+    return'<select data-s="'+w+'" aria-label="Pass">'+o+"</select>";
+  }
+  h='<div class="sh"><span></span>'+hd("a",pa)+hd("b",pb)+'</div><div class="tape split">';
+  for(i=0;i<n;i++){
+    var x=A[i],y=B[i],d=x!==undefined&&y!==undefined&&x!==y;if(d)bad++;
+    h+='<div class="r'+(d?" bad":"")+'"><span class="q">Q'+(i+1)+"</span>"+cell(x,i,false)+cell(y,i,live)+"</div>";
+  }
+  h+='<div class="r"><span class="q">Sum</span><span class="c">'+fmt(sum(A))+'</span><span class="c">'+fmt(sum(B))+"</span></div></div>";
+  if(A.length>=n&&B.length>=n){
+    var df=r2(sum(B)-sum(A));
+    if(bad===0&&df===0)h+='<div class="res ok">✓ Match: both totals are '+fmt(sum(A))+"</div>";
+    else h+='<div class="res bad">✗ '+(df!==0?"Differ by "+fmt(Math.abs(df)):"Totals match, but "+bad+" question"+(bad>1?"s":"")+" differ")+"</div>";
+  }
+  return h;
+}
+function vMark(){
+  var p=lp(),t=sum(p),over=t>cur.max,k=edit!==null?edit+1:p.length+1;
+  var s=p.length>=cur.n&&edit===null?'<div class="warn done">All '+cur.n+" questions done</div>":'<div class="sub">Question '+Math.min(k,cur.n)+" of "+cur.n+"</div>";
+  var h='<div class="top"><b>Marks</b><span><button data-a="hist">History</button> <button data-a="new">New paper</button></span></div>';
+  h+='<div class="card"><div class="tot'+(over?" over":"")+'"><span class="n">'+fmt(t)+'</span><span class="m">/ '+fmt(cur.max)+"</span></div>"+s;
+  if(over)h+='<div class="warn">Total is over the max of '+fmt(cur.max)+"</div>";
+  h+="</div>"+vTape();
+  var fin=full();
+  h+='<div class="ent"><span>'+(fin?"All questions filled":(edit!==null?"Editing Q"+k+" (was "+fmt(p[edit])+")":"Q"+k))+'</span><span class="'+(ent.sel?"sel":"")+'">'+(fin?"":fmt(val()))+"</span></div>";
+  h+=cap?'<div class="cap">'+esc(cap)+"</div>":"";
+  h+='<div class="acts"><button data-a="undo">Undo</button><button data-a="again"'+(fin?"":" disabled")+'>Check again</button><button class="mic'+(listen?" on":"")+'" data-a="mic" aria-label="Voice input">'+MIC+(listen?"Stop":"Mic")+"</button></div>";
+  h+='<div class="pad">';
+  [["7"],["8"],["9"],[".25","f"],["4"],["5"],["6"],[".50","f"],["1"],["2"],["3"],[".75","f"]].forEach(function(b){
+    h+='<button class="'+(b[1]||"")+'" data-a="key" data-k="'+b[0]+'">'+b[0]+"</button>";
+  });
+  h+='<button data-a="key" data-k="b" aria-label="Delete digit">⌫</button><button data-a="key" data-k="0">0</button><button class="p" data-a="key" data-k="+">+</button></div>';
+  return h;
+}
+function vSetup(){
+  return'<div class="top"><b>New paper</b>'+(P.length?'<button data-a="back">Back</button>':"")+'</div><div class="form"><label>Number of questions<input id="qn" type="number" inputmode="numeric" min="1" max="100" value="'+(P[0]?P[0].n:"")+'" onfocus="this.select()"></label><label>Max marks<input id="mm" type="number" inputmode="decimal" min="1" value="'+(P[0]?P[0].max:"")+'" onfocus="this.select()"></label><button class="go" data-a="start">Start marking</button><div class="sub" id="err"></div></div>';
+}
+function vHist(){
+  var h='<div class="top"><b>History</b><button data-a="back">Back</button></div><div class="tape">';
+  if(!P.length)h+='<div class="empty">No papers yet. Start a new paper to begin.</div>';
+  P.forEach(function(p){
+    var l=p.passes[p.passes.length-1],s=stat(p);
+    h+='<div class="card h" data-a="open" data-k="'+p.id+'" role="button" tabindex="0"><div class="row"><b>'+p.d+'</b><span class="t">'+fmt(sum(l))+" / "+fmt(p.max)+'</span></div><div class="row"><span class="sub">'+p.n+" questions, "+p.passes.length+" check"+(p.passes.length>1?"s":"")+'</span><span class="chip '+s[1]+'">'+s[0]+'</span></div><div class="row"><span></span><button class="del'+(arm===p.id?" arm":"")+'" data-a="del" data-k="'+p.id+'">'+(arm===p.id?"Tap again to delete":"Delete")+"</button></div></div>";
+  });
+  return h+"</div>";
+}
+
+var MIC='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg> ';
+var esc=function(x){return x.replace(/&/g,"&amp;").replace(/</g,"&lt;")};
+function undo(){if(edit!==null||hasEnt()){edit=null;ent={w:"",f:0}}else{lp().pop();save()}}
+var U={zero:0,one:1,won:1,two:2,to:2,too:2,three:3,four:4,for:4,five:5,six:6,seven:7,eight:8,ate:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19};
+var T={twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+var FW={quarter:1,quarters:1,fourth:1,fourths:1,forth:1,forths:1};
+var CW={plus:1,add:1,next:1,place:1},UW={undo:1,delete:1,back:1},SW={stop:1,done:1};
+function parse(t){
+  t=t.toLowerCase().replace(/½/g," half ").replace(/¼/g," quarter ").replace(/¾/g," three quarters ")
+    .replace(/\b1\s*\/\s*4\b/g," quarter ").replace(/\b3\s*\/\s*4\b/g," three quarters ").replace(/\b1\s*\/\s*2\b/g," half ")
+    .replace(/\+/g," plus ").replace(/[^a-z0-9. ]/g," ");
+  var k=t.split(/\s+/).map(function(x){return x.replace(/^\.+|\.+$/g,"")}).filter(Boolean),ev=[],i=0;
+  while(i<k.length){
+    var w=k[i],v=null,n=1;
+    if(/^\d+(\.\d+)?$/.test(w))v=parseFloat(w);
+    else if(U[w]!==undefined)v=U[w];
+    else if(T[w]!==undefined){v=T[w];if(U[k[i+1]]>0&&U[k[i+1]]<10){v+=U[k[i+1]];n=2}}
+    if(v!==null){
+      i+=n;
+      if(FW[k[i]]&&v>=1&&v<=3){ev.push({t:"f",v:v/4});i++}
+      else{var wh=Math.floor(v),fr=Math.round((v-wh)*100)/100;if(wh<1000)ev.push({t:"n",v:wh});if(fr===0.25||fr===0.5||fr===0.75)ev.push({t:"f",v:fr})}
+      continue;
+    }
+    i++;
+    if(w==="point"){
+      var d="";
+      while(i<k.length&&d.length<2&&((U[k[i]]!==undefined&&U[k[i]]<10)||/^\d{1,2}$/.test(k[i]))){d+=(U[k[i]]!==undefined?U[k[i]]:k[i]);i++}
+      var f={"25":0.25,"5":0.5,"50":0.5,"75":0.75}[d];if(f)ev.push({t:"f",v:f});
+    }
+    else if(w==="half"||w==="halves")ev.push({t:"f",v:0.5});
+    else if(FW[w])ev.push({t:"f",v:0.25});
+    else if(CW[w])ev.push({t:"c"});
+    else if(UW[w])ev.push({t:"u"});
+    else if(SW[w])ev.push({t:"s"});
+  }
+  return ev;
+}
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition,rec=null,listen=false,cap="";
+function run(t){
+  parse(t).forEach(function(e){
+    if(e.t==="n"){if(!full())ent={w:String(e.v),f:ent.f}}
+    else if(e.t==="f"){if(!full())ent.f=e.v}
+    else if(e.t==="c"){vib();commit()}
+    else if(e.t==="u"){undo()}
+    else if(e.t==="s"){listen=false;try{rec.stop()}catch(x){}}
+  });
+  if(cur&&full()){listen=false;try{rec.stop()}catch(x){}cap="All questions done. Mic is off."}
+}
+function startRec(){
+  rec=new SR();rec.lang="en-IN";rec.continuous=false;rec.interimResults=true;rec.maxAlternatives=1;
+  rec.onresult=function(e){
+    var fin="",it="";
+    for(var i=e.resultIndex;i<e.results.length;i++){var r=e.results[i];if(r.isFinal)fin+=r[0].transcript+" ";else it+=r[0].transcript+" "}
+    if(fin){cap="Heard: “"+fin.trim()+"”";run(fin)}else cap="… "+it.trim();
+    render();
+  };
+  rec.onerror=function(e){
+    if(e.error==="not-allowed"||e.error==="service-not-allowed"){listen=false;cap="Microphone is blocked. Allow it in the browser settings."}
+    else if(e.error==="network"){listen=false;cap="Voice needs internet. Connect and try again."}
+    render();
+  };
+  rec.onend=function(){if(listen)setTimeout(function(){if(listen){try{startRec()}catch(x){}}},150);else render()};
+  try{rec.start()}catch(x){}
+}
+function mic(){
+  if(!SR){cap="Voice typing needs Chrome on Android.";render();return}
+  if(listen){listen=false;cap="";try{rec.stop()}catch(x){}render();return}
+  listen=true;cap="Listening…";startRec();render();
+}
+var ls="";
+function render(){
+  var a=document.getElementById("app"),o=a.querySelector(".tape"),st=o&&ls===scr?o.scrollTop:0;
+  ls=scr;
+  a.innerHTML=scr==="setup"?vSetup():scr==="hist"?vHist():vMark();
+  var t=a.querySelector(".tape");
+  if(t){t.scrollTop=st;var c=t.querySelector(".cur");
+    if(c){var cr=c.getBoundingClientRect(),tr=t.getBoundingClientRect();t.scrollTop+=(cr.top-tr.top)-(t.clientHeight-cr.height)/2}}
+}
+function go(s){if(s!=="mark"){listen=false;try{rec&&rec.stop()}catch(e){}}scr=s;ent={w:"",f:0};edit=null;arm=null;render()}
+document.addEventListener("click",function(e){
+  var t=e.target.closest("[data-a]");if(!t)return;vib();
+  var a=t.dataset.a,k=t.dataset.k;
+  if(a==="key")key(k);
+  else if(a==="row"){var i=+k;if(edit===i){edit=null;ent={w:"",f:0}}else{var v=lp()[i];edit=i;ent={w:"",f:0}}render()}
+  else if(a==="undo"){undo();render()}
+  else if(a==="mic")mic();
+  else if(a==="again"){if(full()){cur.passes.push([]);pa=cur.passes.length-2;pb=cur.passes.length-1;save();render()}}
+  else if(a==="new")go("setup");
+  else if(a==="hist")go("hist");
+  else if(a==="back")go(cur?"mark":"setup");
+  else if(a==="start"){
+    var n=parseInt(document.getElementById("qn").value,10),m=parseFloat(document.getElementById("mm").value);
+    if(!(n>=1&&n<=100)||!(m>0)){document.getElementById("err").textContent="Enter the number of questions (1 to 100) and the max marks.";return}
+    cur={id:Date.now(),d:dt(),n:n,max:m,passes:[[]]};P.unshift(cur);save();pa=0;pb=1;go("mark");
+  }
+  else if(a==="open"){var f=P.filter(function(p){return String(p.id)===k})[0];if(f){cur=f;pb=cur.passes.length-1;pa=Math.max(0,pb-1);go("mark")}}
+  else if(a==="del"){
+    e.stopPropagation();
+    if(arm===+k){P=P.filter(function(p){return p.id!==+k});if(cur&&cur.id===+k)cur=P[0]||null;arm=null;save()}else arm=+k;
+    render();
+  }
+});
+document.addEventListener("change",function(e){
+  var s=e.target.dataset.s;if(!s)return;
+  if(s==="a")pa=+e.target.value;else pb=+e.target.value;render();
+});
+document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.tagName==="INPUT"){var b=document.querySelector('[data-a="start"]');if(b)b.click()}});
+load();cur=P[0]||null;if(cur){pb=cur.passes.length-1;pa=Math.max(0,pb-1);scr="mark"}render();wake();
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
+</script></body></html>
